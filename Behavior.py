@@ -1,33 +1,20 @@
-from tkinter import END
-from turtle import end_fill
-from Shapes import features
+from Input import input
 
 
 class behavior:
-  
-  def skills():
-    avoid = {"id" : "avoid"}
-    noEnter = {"id" : "noEnter"} # Necessary? 
-    avoidPass = {"id" : "avoidPass"}
-    Move = {"id" : "Move"}
-    Dribble = {"id" : "Dribble"}
-    HumanDribble = {"id" : "HumanDribble"}
-    Shoot = {"id" : "Shoot"}
-    Pass = {"id" : "Pass"}
-    Target = {"id" : "Target"} # Necessary? 
 
-  def semantics():
-     
-    avoidOpponentWide = []
-
-    avoidOpponentNarrow = []
-      for opponents in features.opponent:
+  def avoidOpponent:
+      for opponents in input.opponents:
+        pass
     
-    field = [] 
+  def field:
+    pass
 
-    givepass = []
+  def givepass:
+    pass
 
-    dribble = []
+  def dribble:
+    pass
 
-    shoot = []
-
+  def shoot:
+    pass
