@@ -1,11 +1,15 @@
 class input:
-  
-  def __init__(self):
-    opp_loc =     []
-    opp_vel =     []
-    ball_loc =    []
-    peers_loc =   []
-    peers_vel =   []
+    def peer(self, id, x, y, dx, dy):
+        pass 
+
+    def opponent(self, id, x, y, dx, dy):
+        pass
+
+    def ball(self, x, y, dx, dy):
+        pass
+
+    def possesion(self, team, id):
+        pass
     
 
 
