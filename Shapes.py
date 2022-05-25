@@ -1,8 +1,16 @@
-class shapes: 
-    pass
+import shapely
+import math
 
-    def circle(location, radius):
+class features: 
+
+    def peer(self, id, x, y, dx, dy):
         pass
 
-    def eclipse(location, radius, direction):
+    def opponent(self, id, x, y, dx, dy):
+        pass
+
+    def ball(self, x, y, dx, dy):
+        pass
+
+    def possesion(self, team, id):
         pass
