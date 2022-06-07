@@ -1,0 +1,8 @@
+class,x,y,dx,dy,label,role
+Peer,5,0,0,0,1,Main
+Peer,-3,8,0,0,2,Walkfree
+Peer,3,8,0,0,3,Walkfree
+Opponent,3,3,0,0,1,
+Opponent,-2,10,0,0,2,
+Opponent,2,10,0,0,3,
+Ball,5,0.5,0,0,,
