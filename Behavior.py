@@ -62,7 +62,7 @@ class Behavior:
     #for behavior in Behavior.all: 
     #  if behavior.label == "avoidOpponent":
     #    if Shape.intersect(shape, behavior.shape):
-           
+          
 
 
 Behavior.avoidOpponent()
