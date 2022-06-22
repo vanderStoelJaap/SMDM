@@ -1,10 +1,13 @@
 import csv
+import time
+start_time = time.time()
 
 class Feature:
 
     def __init__(self, pos, vel) :
         self.pos = pos
         self.vel = vel
+
 
     @classmethod
     def instantiate_from_csv(cls):
