@@ -1,7 +1,10 @@
 import shapely.geometry as geom
-from shapely.geometry import Point, MultiPoint, asMultiPoint
+import shapely.ops as ops
+from shapely.affinity import scale 
+from shapely.geometry import Point, MultiPoint, asMultiPoint, linestring
 import numpy as np
-import math
+import matplotlib.pyplot as plt
+
 
 class Shape: 
 
@@ -34,5 +37,47 @@ class Shape:
         return convexHull
 
     def intersect(obj1, obj2):
-
         return obj1.intersects(obj2)
+
+    def cover(obj1, obj2): 
+        return obj1.covers(obj2)
+
+    def crosses(obj1, obj2):
+        return obj1.crosses(obj2)
+
+    def overlaps(obj1, obj2):
+        return obj1.overlaps(obj2)
+
+    def touches(obj1, obj2):
+        return obj1.touches(obj2)
+
+    def split(obj, line):
+        #print(f"intersection ? answer: {Shape.intersect(obj,line)}")
+        return ops.split(obj, line)
+
+    def intersection(obj1, obj2):
+        return obj1.intersection(obj2)
+
+    def voronoi(multipoint):
+
+        voronoi = ops.voronoi_diagram(multipoint)
+        return voronoi
+
+    def reshape(region, passRegion, line, avoid_region): 
+
+        reshape = []
+
+        new_region = list(Shape.split(region, line))
+        #print(f"now I have found a region without intersections with avoid behavior")
+        for new_reg in new_region:
+            #print("hello")
+            if not Shape.intersect(new_reg, avoid_region):
+                new_reg = new_reg.intersection(passRegion)
+                reshape.append(new_reg)
+                #print(f"reshape behavior created with shape")
+            #else: 
+                #print(f"intersection check: {Shape.intersect(region, avoid_region)}")
+
+        return reshape   
+
+
