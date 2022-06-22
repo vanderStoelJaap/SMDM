@@ -1,3 +1,6 @@
+import time
+start_time = time.time()
+
 from re import S
 import shapely.geometry as shape
 import matplotlib.pyplot as plt
@@ -9,9 +12,10 @@ from Input import Feature, Opponent, Peer, Ball
 fig = plt.plot()
 plt.axis('equal')
 
+
 field = Shape.rectangle([0,0], Settings.Field[1], Settings.Field[0], True)
 x, y = field.exterior.xy
-field, = plt.plot(x,y, 'g', label = '1')
+field, = plt.plot(x,y, 'g')
 
 goals = [Shape.rectangle([0,i], 1, Settings.Goal, True) for i in [-11.5, 11.5]] 
 for goal in goals: 
@@ -27,23 +31,25 @@ for opponent in Opponent.all:
 for peer in Peer.all:
     pr = Shape.circle(peer.pos,Settings.TurtleDiameter)
     x,y = pr.exterior.xy
-    peer, = plt.plot(x,y, 'b') 
-    
+    peer, = plt.plot(x,y, 'b')   
     
 for behavior in Behavior.all:
-    x,y = behavior.shape.exterior.xy
-    if behavior.label == "checkPassLine":
-        passLine, = plt.plot(x,y, 'k')
-        print("label is checkPassLine")
-    if behavior.label == "avoidOpponent":
-        avoid, = plt.plot(x,y, 'r')
+    if behavior.label == "line":
+        x,y = behavior.shape.coords.xy
+        line, = plt.plot(x,y, 'b')
     else:
-        plt.plot(x,y, 'k')
-        print(behavior.label)
+        #print(behavior.all)
+        #print(f"behavior {behavior.label} with shape {behavior.shape}")
+        x,y = behavior.shape.exterior.xy
+        if behavior.label == "pass":
+            givePass, = plt.plot(x,y, 'k')
+        if behavior.label == "avoid":
+            avoid, = plt.plot(x,y, 'r')
+            pass
+       # else:
+        #    plt.plot(x,y, 'k')
 
 
-plt.legend([field, opp, peer, avoid, passLine], ["field", "opponent", "peer", "avoid", "checkPassLine"])
+plt.legend([field, opp, peer, avoid, givePass], ["field", "opponent", "peer", "avoid region", "pass region"])
 
-print(Peer.all)
-print(Opponent.all)
 plt.show()
