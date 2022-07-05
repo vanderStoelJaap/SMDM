@@ -5,6 +5,7 @@ from shapely.geometry import Point, MultiPoint, asMultiPoint, linestring
 import numpy as np
 import matplotlib.pyplot as plt
 
+""" This class calculates and creates spatial representations"""
 
 class Shape: 
 
@@ -52,31 +53,33 @@ class Shape:
         return obj1.touches(obj2)
 
     def split(obj, line):
-        #print(f"intersection ? answer: {Shape.intersect(obj,line)}")
         return ops.split(obj, line)
 
     def intersection(obj1, obj2):
         return obj1.intersection(obj2)
+
+    def difference(obj1, obj2):
+        return obj1.difference(obj2)
 
     def voronoi(multipoint):
 
         voronoi = ops.voronoi_diagram(multipoint)
         return voronoi
 
-    def reshape(region, passRegion, line, avoid_region): 
+    def reshape(region, passRegion, lines, avoid_region): 
 
+        """Used in checkpassline, has to be rewritten """
         reshape = []
-
-        new_region = list(Shape.split(region, line))
-        #print(f"now I have found a region without intersections with avoid behavior")
+        new_region = []
+        number = 1
+        for line in lines:
+            regions = Shape.split(region, line)
+            for n in regions:
+                new_region.append(n) 
         for new_reg in new_region:
-            #print("hello")
             if not Shape.intersect(new_reg, avoid_region):
                 new_reg = new_reg.intersection(passRegion)
                 reshape.append(new_reg)
-                #print(f"reshape behavior created with shape")
-            #else: 
-                #print(f"intersection check: {Shape.intersect(region, avoid_region)}")
 
         return reshape   
 
