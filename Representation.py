@@ -1,22 +1,41 @@
 import shapely.geometry as geom
 import shapely.ops as ops
+import shapely.affinity as aff
 from shapely.affinity import scale 
-from shapely.geometry import Point, MultiPoint, asMultiPoint, linestring
+from shapely.geometry import Point, MultiPoint, asMultiPoint, LineString
 import numpy as np
-import matplotlib.pyplot as plt
 
 """ This class calculates and creates spatial representations"""
 
 class Shape: 
 
     #SHAPES 
+    def point(pos): 
+        p = geom.Point(pos[0],pos[1])
+        return p 
+
+    def line(xy1, xy2): 
+        l = geom.LineString([xy1,xy2])
+        return l
+
     def circle(pos, radius):
         p = geom.Point(pos[0],pos[1])
-        circ = p.buffer(radius)
+        circ = p.buffer(radius) 
         return circ
 
-    def rectangle(pos, length , width , centred: bool):
-        
+    def ellipse(pos, radius, vel_vec): 
+        phi = np.arctan2(vel_vec[1],vel_vec[0])
+        velocity = 0.25 * np.sqrt(vel_vec[0] ** 2 + vel_vec[1] ** 2 )
+        major = velocity + radius
+        minor = np.sqrt( major ** 2 - velocity ** 2 )
+        midpoint = [pos[0] + velocity, pos[1]]
+        p = geom.Point(midpoint)
+        ellipse = p.buffer(1)
+        ellipse = aff.scale(ellipse, major, minor)
+        ellipse = aff.rotate(ellipse, phi, use_radians=True, origin=(pos[0],pos[1]))
+        return ellipse
+
+    def rectangle(pos, length , width , centred: bool):       
         if centred == True: 
             a = [pos[0] - 0.5*width, pos[1] - 0.5*length] 
             b = [pos[0] + 0.5*width, pos[1] - 0.5*length] 
@@ -31,11 +50,22 @@ class Shape:
         rect = geom.Polygon([a, b, c, d, a])
         return rect
 
-    def convexHull(obj1: list, obj2: list):
+    def buffer(obj, val): 
+        return obj.buffer(val)
 
-        merge = obj1 + obj2
+    def exterior(obj):
+        return obj.exterior.coords
+
+    def convexHull(obj1, obj2):
+        merge = list(obj1) + list(obj2)
         convexHull = geom.MultiPoint(merge).convex_hull
         return convexHull
+
+    def envelope(obj):
+        return obj.envelope
+
+    def bounds(obj): 
+        return obj.bounds
 
     def intersect(obj1, obj2):
         return obj1.intersects(obj2)
@@ -51,6 +81,9 @@ class Shape:
 
     def touches(obj1, obj2):
         return obj1.touches(obj2)
+    
+    def contains(obj1, obj2):
+        return obj1.contains(obj2)
 
     def split(obj, line):
         return ops.split(obj, line)
@@ -61,13 +94,23 @@ class Shape:
     def difference(obj1, obj2):
         return obj1.difference(obj2)
 
-    def voronoi(multipoint):
+    def differenceMultiPolygon(polylist: list, obj): 
+        result = []
+        if polylist and len(polylist) > 1: 
+            for polygon in polylist: 
+                result.append(Shape.difference(polygon, obj))
+        elif polylist: 
+            result.append(Shape.difference(polylist[0], obj))
+        return result
 
+    def voronoi(multipoint):
         voronoi = ops.voronoi_diagram(multipoint)
         return voronoi
 
-    def reshape(region, passRegion, lines, avoid_region): 
+    def area(shape):
+        return shape.area
 
+    def reshape(region, passRegion, lines, avoid_region): 
         """Used in checkpassline, has to be rewritten """
         reshape = []
         new_region = []
