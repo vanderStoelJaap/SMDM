@@ -78,17 +78,9 @@ class Behavior:
     passList = Behavior.getBehavior('pass')
     avoidList =  Behavior.getBehavior('avoid')
     for action in passList:
-
       availableRegions = fun.freeLine(ballPos, action, avoidList)      
-      print(f"a passing action to peer {action.feature} \n free lines are: ")
       if availableRegions == False: 
         Behavior.delete(action)
-        print(f"no free lines found")
-      elif availableRegions == None: 
-        continue
-      elif len(availableRegions) == 0: 
-        print(f"region is fully available")
-        continue 
       else: 
         for i, region in enumerate(availableRegions):
           if i == 0: 
@@ -96,66 +88,6 @@ class Behavior:
           else:       
             Behavior(
               region, "pass", None, action.feature)  
-        print(f"region devided in {i}  accesable regions")  
-
-
-
-    '''
-      givePass_ex = givePass.shape.exterior.coords   
-      givePass_ch = Shape.convexHull(ballPos, list(givePass_ex))       
-      #Behavior(givePass_ch, "reach")
-   
-      for avoid in avoidList:
-        if Shape.intersect(givePass_ch, avoid.shape):
-          buffer = avoid.shape.buffer(0.05)
-          avoid_ch = Shape.convexHull(list(ballPos), list(buffer.exterior.coords))
-          avoid_ex = avoid_ch.exterior.coords
-          poly = geom.Polygon([avoid_ex[0], avoid_ex[1], avoid_ex[-2], avoid_ex[0]])
-          print(f"avoid_ex first point: {avoid_ex[0]}")
-          poly = scale(poly, 10, 10, origin=avoid_ex[0])
-          Behavior(
-            poly, "other", None, givePass.feature)          
-          lines = [LineString([avoid_ex[0], avoid_ex[1]]), LineString([avoid_ex[0], avoid_ex[-2]])]
-          scaled_lines = []
-          #vis_lines = []
-
-          """
-          vis_line = Shape.intersection(scaled_line, Features.field)
-          balletje = list(ballPos[0])
-          vis_line = Shape.difference(vis_line, Shape.circle(balletje, 0.1))
-          print(vis_line)
-          vis_line = vis_line[1]
-          """
-          setter = False
-          if Shape.contains(poly, givePass.shape):
-            print("delete region because pass is not possible ")
-            setter = True
-          elif Shape.intersect(poly, givePass.shape):
-            for line in lines: 
-              scaled_line = scale(line, 10,10)
-              scaled_lines.append(scaled_line)
-            print("I have found an intersection !!!!!!!!!!!!11!!!!!!")
-            #vis_lines.append(vis_line)
-            #Behavior(vis_line, 'line') 
-          else: 
-            print(Shape.crosses(poly,givePass.shape))
-            print("no intersection between regions")
-
-          if setter == True: 
-            Behavior.delete(givePass)
-            break
-
-          else: 
-            newReg = Shape.reshape(givePass_ch , givePass.shape, scaled_lines, avoid.shape)
-            for i, region in enumerate(newReg):
-              print("NEW REGION ADJUSTED OR CREATED")
-              if i == 0: 
-                givePass.shape = region
-              else:
-                Behavior(
-                  region, "pass", None, givePass.feature)
-            
-          '''
     
 
   """ 
@@ -167,15 +99,20 @@ class Behavior:
 
     points = []
 
-    peerList = Feature.getFeature('Peer', 'assist')
-    for peer in peerList:
-      points.append(peer.pos)
+    passList = Behavior.getBehavior('pass')
+    for action in passList:
+      points.append(action.center)
       avoidList = Behavior.getBehavior('avoid')
+      for avoid in avoidList:
+        points.append(avoid.center)
 
-    for avoid in avoidList:
-      points.append(avoid.center)
+      reachableRegion = fun.Reachable(action, points)
+    
+    """    
     points = geom.MultiPoint(points)
     reachability = Shape.voronoi(points)
+
+    peerList = Feature.getFeature('Peer', 'assist')
     
     for region in reachability: 
       if Shape.intersect(geom.Point(peer.pos), region):
@@ -188,6 +125,8 @@ class Behavior:
               behavior.shape = newReg
               #Behavior(otherReg[0], "reach")
               #Behavior(otherReg[1], "reach")
+    """
+
 
   def dribble (): 
     type = "dribble"
@@ -217,50 +156,15 @@ class Behavior:
   def checkShot ():
     ballPos = Feature.getFeature('Ball')[0].pos
     shot = Behavior.getBehavior('shot')[0]
+    avoidList = Behavior.getBehavior('avoid')
 
-    avoidRegions = Behavior.getBehavior('avoid')
-    for avoid in avoidRegions: 
-      shot_ex = shot.shape.exterior.coords
-      shot_ch = Shape.convexHull(list(ballPos), list(shot_ex))
-
-      if Shape.intersect(shot_ch, avoid.shape) or Shape.cover(shot_ch, avoid.shape):
-        extra_buffer = avoid.shape.buffer(0.001)
-        avoid_ch = Shape.convexHull(list(ballPos), list(extra_buffer.exterior.coords)).exterior.coords
-        poly = geom.Polygon([shot_ex[0], shot_ex[1], shot_ex[-2], shot_ex[0]])
-        poly = scale(poly, 10, 10)
-        lines = [LineString([avoid_ch[0], avoid_ch[1]]), LineString([avoid_ch[0], avoid_ch[-2]])]    
-        
-        scaled_lines = []
-        vis_lines = []
-        for line in lines:          
-
-          scaled_line = scale(line, 10,10)
-          """
-          vis_line = Shape.intersection(scaled_line, Features.field)
-          balletje = list(ballPos[0])
-          vis_line = Shape.difference(vis_line, Shape.circle(balletje, 0.1))
-          vis_line = vis_line[1]
-          """
-          if Shape.intersect(shot.shape, poly):
-            scaled_lines.append(scaled_line)
-            #vis_lines.append(vis_line)
-            #Behavior(vis_line, 'line') 
-          elif Shape.cover(poly, shot.shape):
-            del shot
-        
-        newReg = Shape.reshape(shot_ch , shot.shape, scaled_lines, avoid.shape)
-
-        for i, region in enumerate(newReg):
-          if i == 0: 
-            shot.shape = region
-          else:
-            Behavior(
-              region, "reach", None, shot.feature)
-        
-        #otherReg = Shape.difference(newReg[0], shot.shape)
-        #Behavior(
-        #  otherReg, "reach", None, shot.feature)       
-
-
-        
-        
+    availableRegions = fun.freeLine(ballPos, shot, avoidList)      
+    if availableRegions == False: 
+      Behavior.delete(shot)
+    else: 
+      for i, region in enumerate(availableRegions):
+        if i == 0: 
+          shot.shape = region
+        else:       
+          Behavior(
+            region, "pass", None, shot.feature)    
