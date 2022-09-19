@@ -14,6 +14,9 @@ class Shape:
         p = geom.Point(pos[0],pos[1])
         return p 
 
+    def MultiPoint(points):
+        return geom.MultiPoint(points)
+
     def line(xy1, xy2): 
         l = geom.LineString([xy1,xy2])
         return l
