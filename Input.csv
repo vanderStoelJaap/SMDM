@@ -2,7 +2,7 @@ class,x,y,dx,dy,label,role
 Self,0,3,0,0,1,Main
 Peer,-3,8,0,0,2,assist
 Peer,2,8,0,0,3,assist
-Opponent,1,8.5,-2,-2,1,
+Opponent,-2,8.5,-2,-2,1,
 Opponent,2.5,6,0,-2,2,
 Opponent,-1,6,-2,0,3,
 Ball,0,3.5,0,0,,
