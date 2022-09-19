@@ -85,7 +85,7 @@ def run(behaviors):
             #if behavior.type == "other": 
                 #other, = plt.plot(x,y, 'red', linestyle = 'dashed')
 
-    plt.legend([field, opp, peer, givePass, dribble, shot, avoid], ["field", "opponent", "peer", "pass region", "dribble region", "shot region", "avoid region"])
+    #plt.legend([field, opp, peer, givePass, dribble, shot, avoid], ["field", "opponent", "peer", "pass region", "dribble region", "shot region", "avoid region"])
 
     plt.show()
 
