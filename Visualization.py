@@ -1,118 +1,102 @@
-import shapely.geometry as shape
-import shapely.ops
-import matplotlib.pyplot as plt
-import Settings
-from Features import Feature
-from Behavior import Behavior
+from Behaviors import Behavior
 from Representation import Shape
-import Features
-from matplotlib.pyplot import draw
-from potentialField import Potfield
-import numpy as np
+from matplotlib.pyplot import plot, axis, figure, show, legend, gca, fill
+from celluloid import Camera
 
+FRAMERATE = 20/5
+TIME = 30
+FRAMES = TIME * FRAMERATE
+COUNT = 0
+fig = figure()
+axis('equal')
+axis('off')
+camera = Camera(fig)
 
-fig = plt.plot()
-plt.axis('equal')
+def run(me, ball, peerList, opponentList, field):
 
-def run(behaviors):
+    dt = 0.5
+    do = 0.5
+    db = 0.25
 
-    field = Features.field
-    x, y = field.exterior.xy
-    field, = plt.plot(x,y, 'green')
+    x, y = field.shape.exterior.xy
+    plot(x,y, 'green', label = 'field')
 
-    goals = [Features.ownGoal, Features.oppGoal]
+    goals = [field.ownGoal, field.oppGoal]
     for goal in goals:
         x,y = goal.exterior.xy
-        field, = plt.plot(x,y, 'green')
+        plot(x,y, 'green', label = 'field')
+       
+    for opponent in opponentList: 
+        repr = Shape.circle(opponent.pos, do)
+        x,y = repr.exterior.xy
+        plot(x,y, 'magenta', label = 'opponent')
 
-    Opponents = Feature.getFeature('Opponent')
+    for peer in peerList: 
+        repr = Shape.circle(peer.pos, dt)
+        x,y = repr.exterior.xy
+        plot(x,y, 'cyan', label = 'peer')  
     
-    for opponent in Opponents: 
-        opp = Shape.circle(opponent.pos,Settings.TurtleDiameter)
-        x,y = opp.exterior.xy
-        opp, = plt.plot(x,y, 'magenta')
+    repr = Shape.circle(me.pos, dt)
+    x,y = repr.exterior.xy
+    plot(x,y, 'purple', label = 'me')
 
-    """      
-        DTpoints = []  
-        DTpoints.append(opponent.pos)
+    repr = Shape.circle(ball.pos, db)
+    x,y = repr.exterior.xy
+    plot(x,y, 'yellow', linewidth = 2.5, label = 'ball')
+
+    d = Behavior.all
+    plotbehavior(d, 'avoidopp', 'orange', False)
+    plotbehavior(d, 'shot', 'darkred', False)
+    plotbehavior(d, 'Pass', 'grey')
+    plotbehavior(d, 'dribble','blue')
+
+    #LEGEND
+    handles, labels = gca().get_legend_handles_labels()
+    by_label = dict(zip(labels, handles))
+    legend(by_label.values(), by_label.keys())
+
+    camera.snap()
+
+    #DEBUG
+
+    #Print area
+    #print(f"area of the field: {area(field.shape)}")
+    #print(f"area of the feasible design space (all skill spaces combined): {area(d)}")
+
+    
+    
+    show()
+    
+    global COUNT
+    print(f" COUNT: {COUNT}")
+    if COUNT == FRAMES:
+        animation = camera.animate()
+        animation.save('SMDM.mp4')
+        show()
+        print("---------------- ANIMATION CREATED! ----------------")
+        COUNT = COUNT + 1
+    else:
+        COUNT = COUNT + 1
 
 
-    DTpoints = DTpoints + list(Features.field.exterior.coords)
-    #veld = [ -7 -11, 7 -11, 7 11, 7 11, -7 -11 ]
-    #DTpoints.append(veld)
-    print("****************************************************************************************************")
-    print(Features.field.exterior.wkt)
-    print("****************************************************************************************************")
-    DTpoints = shape.MultiPoint(DTpoints)
-
-    print(DTpoints.wkt)
-
-    DT = shapely.ops.triangulate(DTpoints)
-    for triangle in DT:
-        x,y = triangle.exterior.xy
-        DT, = plt.plot(x,y, 'black', linestyle = 'dashed')
-    """
-
-
-    Peers = Feature.getFeature('Peer')
-    for peer in Peers: 
-        pr = Shape.circle(peer.pos,Settings.TurtleDiameter)
-        x,y = pr.exterior.xy
-        peer, = plt.plot(x,y, 'cyan')   
-
-    Me = Feature.getFeature('Self')
-    for me in Me: 
-        me = Shape. circle(me.pos, Settings.TurtleDiameter)
-        x,y = me.exterior.xy
-        me, = plt.plot(x,y, 'cyan')
-        
-    for behavior in behaviors:
-        if behavior.type == "line":
-            x,y = behavior.shape.coords.xy
-            line, = plt.plot(x,y, 'red', linestyle = 'dotted')
-        else:
+def plotbehavior(dict, key, color, plottarget = True,):
+    try:
+        for behavior in dict[key]:
             x,y = behavior.shape.exterior.xy
-            if behavior.type == "pass":
-                givePass, = plt.plot(x,y, 'gray', linewidth = 2.5 )
-            if behavior.type == "dribble":
-                dribble, = plt.plot(x,y, 'blue', linewidth = 2.5 )
-            if behavior.type == "shot": 
-                shot, = plt.plot(x,y, 'darkred', linewidth = 2.5 )
-            if behavior.type == "avoid":
-                avoid, = plt.plot(x,y, 'orange', linewidth = 2.5 )
-            if behavior.type == "reach": 
-                debug, = plt.plot(x,y, 'red', linestyle = 'dashed')
-            #if behavior.type == "other": 
-                #other, = plt.plot(x,y, 'red', linestyle = 'dashed')
+            tx, ty = behavior.pos[0], behavior.pos[1]
+            plot(x,y, color , linewidth = 2.5, label = key)
+            if plottarget:
+                plot(tx,ty, color , linewidth = 1, marker = 'o')
+    except:
+        return
 
-    #plt.legend([field, opp, peer, givePass, dribble, shot, avoid], ["field", "opponent", "peer", "pass region", "dribble region", "shot region", "avoid region"])
-
-    plt.show()
-
-def vizPotField(pmap, X, Y):
-    pmap = np.array(pmap).T
-    plt.pcolormesh(X, Y, pmap, cmap='jet')
-
-
-def nGridPoint(behaviors):
-
+def area(input):
     area = 0
-    spacing = 0.25
-
-    for behavior in behaviors: 
-        if behavior.type != "avoid": 
-            region = behavior.shape
-            regionArea = Shape.area(region)
-            area = area + regionArea
-
-
-    field = Features.field
-    fieldArea = Shape.area(field)
-
-    n = area / (spacing * spacing)
-    nField = fieldArea / (spacing * spacing)
-    
-    reduction = 100 - (area/fieldArea*100)
-
-    print (f"The area of all possible actions is: {area}, thats a reduchtion of {reduction} percent")
-    print (f"The number of gridpoints of all possible actions is: {n}, compared to the {nField} of the total field")
+    try:
+        values = list(input.values())
+        for regions in values:
+            for region in regions:
+                area = area + Shape.area(region.shape)
+    except:
+        area = Shape.area(input)
+    return area
