@@ -1,41 +1,49 @@
-import shapely.geometry as geom
-import shapely.ops as ops
-import shapely.affinity as aff
-from shapely.affinity import scale 
-from shapely.geometry import Point, MultiPoint, asMultiPoint, LineString
-import numpy as np
+from shapely.geometry import Point, MultiPoint, LineString, Polygon
+from shapely.ops import voronoi_diagram, split
+from shapely.affinity import scale, rotate
+
+from numpy import sqrt, arctan2
+import matplotlib.pyplot as plt
 
 """ This class calculates and creates spatial representations"""
+
+RESOLUTION = 4
 
 class Shape: 
 
     #SHAPES 
     def point(pos): 
-        p = geom.Point(pos[0],pos[1])
-        return p 
+        return Point(pos[0],pos[1])
 
     def MultiPoint(points):
-        return geom.MultiPoint(points)
+        return MultiPoint(points)
+
+    def representativePoint(shape):
+        p = shape.representative_point()
+        return [p.x, p.y]
 
     def line(xy1, xy2): 
-        l = geom.LineString([xy1,xy2])
+        l = LineString([xy1,xy2])
         return l
 
     def circle(pos, radius):
-        p = geom.Point(pos[0],pos[1])
-        circ = p.buffer(radius) 
+        p = Point(pos[0],pos[1])
+        circ = p.buffer(radius, RESOLUTION) 
         return circ
 
-    def ellipse(pos, radius, vel_vec): 
-        phi = np.arctan2(vel_vec[1],vel_vec[0])
-        velocity = 0.25 * np.sqrt(vel_vec[0] ** 2 + vel_vec[1] ** 2 )
-        major = velocity + radius
-        minor = np.sqrt( major ** 2 - velocity ** 2 )
-        midpoint = [pos[0] + velocity, pos[1]]
-        p = geom.Point(midpoint)
-        ellipse = p.buffer(1)
-        ellipse = aff.scale(ellipse, major, minor)
-        ellipse = aff.rotate(ellipse, phi, use_radians=True, origin=(pos[0],pos[1]))
+    def buffer(obj, dist): 
+        return obj.buffer(dist, RESOLUTION)
+
+    def ellipse(pos, radius, vel_vec, fv): 
+        phi = arctan2(vel_vec[1],vel_vec[0]) #orientation of velocity
+        velocity = sqrt(vel_vec[0] ** 2 + vel_vec[1] ** 2 ) #magnitude of velocity
+        major = radius + fv*velocity #fv iteratively chosen
+        minor = radius
+        c = sqrt( (0.5*major) ** 2  - (0.5*minor) ** 2)
+        focal = (pos[0] + c, pos[1])
+        ellipse = Shape.circle(focal, 1)
+        ellipse = scale(ellipse, major, minor) #, origin=(pos[0],pos[1]))
+        ellipse = rotate(ellipse, phi, use_radians=True, origin=(pos[0],pos[1]))
         return ellipse
 
     def rectangle(pos, length , width , centred: bool):       
@@ -50,7 +58,7 @@ class Shape:
             c = [pos[0] + width, pos[1] + length]
             d = [pos[0], pos[1] + length]
 
-        rect = geom.Polygon([a, b, c, d, a])
+        rect = Polygon([a, b, c, d, a])
         return rect
 
     def buffer(obj, val): 
@@ -59,10 +67,9 @@ class Shape:
     def exterior(obj):
         return obj.exterior.coords
 
-    def convexHull(obj1, obj2):
-        merge = list(obj1) + list(obj2)
-        convexHull = geom.MultiPoint(merge).convex_hull
-        return convexHull
+    def convexHull(obj1: list, obj2: list): 
+        merge = [*obj1, *obj2]
+        return MultiPoint(merge).convex_hull
 
     def envelope(obj):
         return obj.envelope
@@ -89,7 +96,7 @@ class Shape:
         return obj1.contains(obj2)
 
     def split(obj, line):
-        return ops.split(obj, line)
+        return split(obj, line)
 
     def intersection(obj1, obj2):
         return obj1.intersection(obj2)
@@ -99,16 +106,19 @@ class Shape:
 
     def differenceMultiPolygon(polylist: list, obj): 
         result = []
-        if polylist and len(polylist) > 1: 
-            for polygon in polylist: 
-                result.append(Shape.difference(polygon, obj))
-        elif polylist: 
-            result.append(Shape.difference(polylist[0], obj))
+        for polygon in polylist: 
+            regions = polygon.difference(obj)
+            if regions.is_empty:
+                return None
+            try:
+                for region in regions:
+                    result.append(region)
+            except:
+                result.append(regions)
         return result
 
     def voronoi(multipoint):
-        voronoi = ops.voronoi_diagram(multipoint)
-        return voronoi
+        return voronoi_diagram(multipoint)
 
     def area(shape):
         return shape.area
@@ -129,4 +139,24 @@ class Shape:
 
         return reshape   
 
+    def distance(pos1, pos2):
+        pos1 = Point(pos1) 
+        pos2 = Point(pos2) 
+        return pos1.distance(pos2)
 
+    def empty(region):
+        return region.is_empty
+
+    def linscale(object, xfact, yfact):
+        return scale(object, xfact, yfact)
+
+    def perpLine(begin, end):
+        dx = end[0] - begin[0]
+        dy = end[1] - begin[1]
+
+        yb = begin[1] - 10*dx
+        ye = begin[1] + 10*dx
+        xb = begin[0] + 10*dy
+        xe = begin[0] - 10*dy
+
+        return Shape.line((xb, yb), (xe, ye))
