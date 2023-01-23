@@ -18,11 +18,11 @@ fv = 0.5
 DRIBBLEDIAM = 3
 MINPASSDIST= 3
 
+DRIBBLEREGION = None
+INFLUENCEDIST = 15.0
+
 class Behavior:
   all = {}
-
-  DRIBBLEREGION = None
-  INFLUENCEDIST = 15.0
 
   def __init__(self, shape, pos, peer = None, shape2 = None):
     self.pos = pos
@@ -124,11 +124,12 @@ def givePass(me, peers):
     checkPassLine(me)
 
 def makeDribble(me): 
-  if (Behavior.DRIBBLEREGION == None) or (not Shape.intersect(Shape.point(me.pos), Behavior.DRIBBLEREGION)):
+  global DRIBBLEREGION
+  if (DRIBBLEREGION == None) or (not Shape.intersect(Shape.point(me.pos), DRIBBLEREGION)):
     shape = Shape.circle(me.pos, DRIBBLEDIAM)
-    Behavior.DRIBBLEREGION = inField(shape)
+    DRIBBLEREGION = inField(shape)
   
-  dribble(Behavior.DRIBBLEREGION, me.pos)
+  dribble(DRIBBLEREGION, me.pos)
 
   divideForwardBackward(me)
   dodgeOpponent(me)
@@ -172,7 +173,6 @@ def checkReachability():
   for avoidOpp in avoidList:
     points.append(avoidOpp.pos)
   
-  print(f"points to calculate reachability: {points}")
   voronoi = fun.voronoi(points)
   for action in passList:
     fun.reachable(action, voronoi)
@@ -211,7 +211,7 @@ def dodgeOpponent(me):
   actionList = dribble.get()
   avoidList = avoidopp.get()
   for action in actionList:
-      availableRegions = fun.freeSpace(me.pos, action, avoidList, Behavior.INFLUENCEDIST)
+      availableRegions = fun.freeSpace(me.pos, action, avoidList, INFLUENCEDIST)
       if availableRegions == None:
         Behavior.delete(action)
       else:
@@ -232,12 +232,15 @@ def divideForwardBackward(me):
   #if intersect then split region 
   for action in actionList: 
     actionRegion = action.shape
-    if actionRegion.intersects(line):
-      regions =actionRegion.difference(bufline)
-      for i, region in enumerate(regions):
-        if i == 0:
-          action.shape = region
-          action.pos = Shape.representativePoint(action.shape)
-        else:
-          action = dribble(region, None)
-          action.pos = Shape.representativePoint(action.shape)
+    try:
+      if actionRegion.intersects(line):
+        regions =actionRegion.difference(bufline)
+        for i, region in enumerate(regions):
+          if i == 0:
+            action.shape = region
+            action.pos = Shape.representativePoint(action.shape)
+          else:
+            action = dribble(region, None)
+            action.pos = Shape.representativePoint(action.shape)
+    except: 
+      print(f"The dribble region is not defined properly -> type: {type(action)} region: {actionRegion}")
