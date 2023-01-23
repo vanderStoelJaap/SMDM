@@ -1,3 +1,5 @@
+# NOT USED!
+
 """
 Constructing potential field inside polygon 
 Inpunt:     Region of interest, Type of potential field, Settings (esolution)
