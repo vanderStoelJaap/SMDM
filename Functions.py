@@ -3,9 +3,14 @@ from shapely.geometry import Point, MultiPoint
 from shapely.affinity import scale
 from shapely.ops import voronoi_diagram
 from numpy import sqrt, arctan2
+
+#SETTINGS
+MAX_ACCELERATION = 4.5 #max acceleration of turtle
+REACTIONTIME = 1/20    #reaction time of turtle = sample rate
+
 #DEBUG
-import matplotlib.pyplot as plt
-DEBUG = True
+#import matplotlib.pyplot as plt
+DEBUG = False
 
 """
 This class contains geometric operations used to constraint the actions
@@ -49,7 +54,6 @@ class Functions:
 
                     #DEBUG
                     if DEBUG:
-                        print("------------ DEBUG DEBUG DEBUG -----------------")
                         constraint = actionRegion.intersection(blockedRegion)
                         Functions.plotconstraint(constraint, 'red')
 
@@ -73,8 +77,6 @@ class Functions:
             return Shape.representativePoint(region)
 
     def caculate_stop_point(pos, vel_vec):
-        MAX_ACCELERATION = 4.5
-        REACTIONTIME = 1/20
         dx = (0.5 * vel_vec[0]) * (vel_vec[0]/MAX_ACCELERATION + REACTIONTIME)
         dy = (0.5 * vel_vec[1]) * (vel_vec[1]/MAX_ACCELERATION + REACTIONTIME)
         return [pos[0] + dx, pos[1] + dy] 
@@ -119,9 +121,6 @@ class Functions:
             if actionRegions == None:
                 break
             actionRegions = Shape.differenceMultiPolygon(actionRegions, region)
-
-            #DEBUG
-            #print(f"actionregions: {actionRegions}")
         return actionRegions
     
     def opponentsToGoal(skill, field, objects: list):
